@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: dev
 
     steps:
       - name: Checkout
@@ -19,10 +20,10 @@ jobs:
           node-version: '18' # Use a recent LTS version
 
       - name: Install dependencies
-        run: npm ci # Use ci for faster, more reliable installs in CI
+        run: npm ci
 
       - name: Build
-        run: npm run build # Assumes your build script is 'build'
+        run: npm run build
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2

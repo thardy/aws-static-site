@@ -1,0 +1,25 @@
+{
+  "name": "aws-static-site",
+  "version": "0.0.1",
+  "description": "prototype",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "rimraf ./build",
+    "build": "copyfiles -u 1 src/index.html build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thardy/aws-static-site.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thardy/aws-static-site/issues"
+  },
+  "homepage": "https://github.com/thardy/aws-static-site#readme",
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "rimraf": "^6.0.1"
+  }
+}
