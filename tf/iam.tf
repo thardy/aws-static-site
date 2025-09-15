@@ -8,8 +8,8 @@ data "aws_iam_policy_document" "github_actions_assume_role_policy" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      # This restricts the role to a specific GitHub repository and branch.
-      values = ["repo:${replace(var.github_repository_url, "https://github.com/", "")}:ref:refs/heads/main"]
+      # This restricts the role to a specific GitHub repository and environment.
+      values = ["repo:${replace(var.github_repository_url, "https://github.com/", "")}:environment:dev"]
     }
   }
 }
