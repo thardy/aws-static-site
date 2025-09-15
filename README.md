@@ -1,21 +1,23 @@
 # Deploying a Static React SPA to AWS with CloudFront and GitHub Actions
 
-This tutorial will guide you through deploying a static React single-page application (SPA) to Amazon Web Services (AWS) using S3 for storage, CloudFront as a content delivery network (CDN), and GitHub Actions for continuous integration and deployment (CI/CD).
+This project demonstrates two ways to deploy the contents of a build directory to Amazon Web Services (AWS) using S3 for storage, CloudFront as a content delivery network (CDN), and GitHub Actions for continuous integration and deployment (CI/CD).
 
-## Table of Contents
+Choose your preferred deployment method:
 
-1.  [Prerequisites](#prerequisites)
-2.  [Step 1: Create a New AWS Account](#step-1-create-a-new-aws-account)
-3.  [Step 2: Set up S3 for Static Website Hosting](#step-2-set-up-s3-for-static-website-hosting)
-4.  [Step 3: Set up a CloudFront Distribution](#step-3-set-up-a-cloudfront-distribution)
-5.  [Step 4: Set up GitHub Actions for CI/CD](#step-4-set-up-github-actions-for-cicd)
+[Manual Deployment](#manual-deployment) | [Terraform Deployment](#terraform-deployment)
 
-## Prerequisites
+---
+
+## Manual Deployment
+
+How to setup the entire infrastructure manually using the AWS Management Console.
+
+### 1. Prerequisites
 
 *   A GitHub account and a repository with your React application.
 *   Node.js and npm (or yarn) installed on your local machine to build the React app.
 
-## Step 1: Create a New AWS Account
+### 2. Create a New AWS Account
 
 If you don't already have an AWS account, you'll need to create one. AWS offers a Free Tier that provides a limited amount of services for free for 12 months, and some services have an always-free tier.
 
@@ -30,11 +32,11 @@ If you don't already have an AWS account, you'll need to create one. AWS offers 
 
 Once your account is created, you will have access to the AWS Management Console. It may take a few minutes to a few hours for your account to be fully activated.
 
-## Step 2: Set up S3 for Static Website Hosting
+### 3. Set up S3 for Static Website Hosting
 
 Amazon S3 (Simple Storage Service) is where we will store the built files of our React application.
 
-### 2.1. Create an S3 Bucket
+#### 3.1. Create an S3 Bucket
 
 1.  **Open the S3 service:** In the AWS Management Console, search for "S3" in the services search bar and select it.
 2.  **Create a new bucket:** Click on the "Create bucket" button.
@@ -44,7 +46,7 @@ Amazon S3 (Simple Storage Service) is where we will store the built files of our
 4.  **Block Public Access settings:** Leave the "Block all public access" settings **checked** (the default). We will provide access to the bucket only from CloudFront.
 5.  **Create the bucket:** Leave the rest of the settings as default and click "Create bucket".
 
-### 2.2. Enable Static Website Hosting
+#### 3.2. Enable Static Website Hosting
 
 Even though we will be serving content through CloudFront, it's a good practice to configure the bucket for static website hosting, mainly to set the index and error documents.
 
@@ -58,11 +60,11 @@ Even though we will be serving content through CloudFront, it's a good practice 
 
 Your S3 bucket is now created. We will add the bucket policy that allows CloudFront to access it in the next step.
 
-## Step 3: Set up a CloudFront Distribution
+### 4. Set up a CloudFront Distribution
 
 CloudFront is a CDN that will cache our application's content at edge locations around the world. The setup process has recently been highly simplified by AWS.
 
-### 3.1. Create the Distribution
+#### 4.1. Create the Distribution
 
 1.  **Navigate to Distributions:** In the AWS Console, go to the CloudFront service. In the left menu, click **Distributions**, and then **"Create distribution"**.
 2.  **Configure Origin:**
@@ -70,13 +72,13 @@ CloudFront is a CDN that will cache our application's content at edge locations 
     *   **Allow private S3 bucket access to CloudFront:** This is the most important section for securing your bucket. The UI should have a section with this exact title.
     *   **Action Required: None.** The default setting, labeled **"Allow private S3 bucket access to CloudFront - Recommended"**, handles the entire security configuration automatically. As the AWS info panel states, CloudFront will create the necessary access controls (the OAC) and update your S3 bucket policy for you when the distribution is created. You do not need to manually create an OAC or copy any policies.
 
-### 3.2. Configure Viewer and Cache Settings
+#### 4.2. Configure Viewer and Cache Settings
 
 1.  **Viewer protocol policy:** Set this to **"Redirect HTTP to HTTPS"** to ensure all traffic is secure.
 2.  **Allowed HTTP methods:** Select **"GET, HEAD, OPTIONS"**.
 3.  **Cache key and origin requests:** For the cache policy, you can use the default **`CachingOptimized`**.
 
-### 3.3. Web Application Firewall (WAF)
+#### 4.3. Web Application Firewall (WAF)
 
 On the final page of the wizard, you will be asked to configure security.
 
@@ -84,7 +86,7 @@ On the final page of the wizard, you will be asked to configure security.
     *   Select **"Do not enable security protections"**.
     *   **Reasoning:** AWS WAF is a powerful security service, but it is not part of the Free Tier. Enabling it will incur costs. For this tutorial, we will not use it.
 
-### 3.4. Create the Distribution and Configure SPA Settings
+#### 4.4. Create the Distribution and Configure SPA Settings
 
 1.  Click **"Create distribution"**.
 2.  **Wait for deployment:** It will take several minutes for the distribution to deploy. You can see its status in the CloudFront console. Wait until the "Last modified" date is no longer "Deploying".
@@ -105,11 +107,11 @@ On the final page of the wizard, you will be asked to configure security.
 
 Once these changes are saved, you can use the **Distribution domain name** to access your application.
 
-## Step 4: Set up GitHub Actions for CI/CD
+### 5. Set up GitHub Actions for CI/CD
 
 Now we'll set up a GitHub Actions workflow to automatically build our React app, deploy it to S3, and invalidate the CloudFront cache whenever we push changes to our repository.
 
-### 4.1. Create an IAM User for GitHub Actions
+#### 5.1. Create an IAM User for GitHub Actions
 
 For security, we'll create a dedicated IAM (Identity and Access Management) user for GitHub Actions with only the permissions it needs.
 
@@ -160,7 +162,7 @@ For security, we'll create a dedicated IAM (Identity and Access Management) user
     *   Click **"Create access key"**.
     *   **This is your only chance to see the Secret Access Key.** Copy both the **Access key ID** and the **Secret access key** and save them somewhere safe temporarily.
 
-### 4.2. Add AWS Credentials to GitHub Secrets
+#### 5.2. Add AWS Credentials to GitHub Secrets
 
 1.  In your GitHub repository, go to **"Settings"** > **"Secrets and variables"** > **"Actions"**.
 2.  Click **"New repository secret"** for each of the following secrets:
@@ -170,9 +172,222 @@ For security, we'll create a dedicated IAM (Identity and Access Management) user
     *   `S3_BUCKET_NAME`: The name of your S3 bucket.
     *   `CLOUDFRONT_DISTRIBUTION_ID`: Go to your CloudFront distribution to find its ID (it's a string like `E1234567890ABC`).
 
-### 4.3. Create the GitHub Actions Workflow
+#### 5.3. Create the GitHub Actions Workflow
 
 This workflow will run on every push to the `main` branch. It will build the React app, sync the build files to S3, and create a CloudFront invalidation.
 
 1.  In your project, create a directory `.github/workflows`.
 2.  Inside this directory, create a file named `deploy.yml`. The next section will provide the content for this file.
+
+---
+
+## Terraform Deployment
+
+How to use Terraform to setup all of the AWS infrastructure. The Terraform configuration is located in the `tf/` directory. This is the recommended approach for managing your infrastructure as code.
+
+### 1. Prerequisites
+
+*   The [AWS CLI](https://aws.amazon.com/cli/) installed on your local machine.
+*   [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) installed on your local machine.
+
+### 2. Local AWS Configuration (One-Time Setup)
+
+To allow Terraform to securely access your AWS account, you must configure the AWS CLI. This requires an IAM User with permissions to manage the Terraform state backend. **This user is for your local development machine and is separate from the IAM Role that the GitHub Actions CI/CD pipeline will use.**
+
+Each developer on the team should have their own IAM user to ensure accountability and security.
+
+1.  **Create a `<developer-name>-developer` IAM User:**
+    *   In the AWS Console, navigate to **IAM** > **Users** and create a new user named `<your-name>-developer` (e.g., `jane-doe-developer`).
+    *   On the permissions screen, choose **"Attach policies directly"**, then click **"Create policy"**.
+    *   In the policy editor, switch to the **JSON** tab and paste the policy below. **Important:** Replace `your-terraform-state-bucket-name` with the actual name of the S3 bucket you created for your Terraform state.
+
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "TerraformStateBucketRead",
+                "Effect": "Allow",
+                "Action": "s3:ListBucket",
+                "Resource": "arn:aws:s3:::your-terraform-state-bucket-name"
+            },
+            {
+                "Sid": "TerraformStateObjectActions",
+                "Effect": "Allow",
+                "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject"
+                ],
+                "Resource": "arn:aws:s3:::your-terraform-state-bucket-name/*"
+            },
+            {
+                "Sid": "ProjectS3BucketManagement",
+                "Effect": "Allow",
+                "Action": [
+                    "s3:CreateBucket",
+                    "s3:DeleteBucket",
+                    "s3:ListAllMyBuckets",
+                    "s3:GetBucketLocation",
+                    "s3:GetBucketPolicy",
+                    "s3:PutBucketPolicy",
+                    "s3:PutBucketPublicAccessBlock",
+                    "s3:PutBucketWebsite"
+                ],
+                "Resource": "*"
+            },
+            {
+                "Sid": "ProjectIAMManagement",
+                "Effect": "Allow",
+                "Action": [
+                    "iam:GetOpenIDConnectProvider",
+                    "iam:ListOpenIDConnectProviders",
+                    "iam:CreateRole",
+                    "iam:DeleteRole",
+                    "iam:GetRole",
+                    "iam:TagRole",
+                    "iam:ListRolePolicies",
+                    "iam:ListAttachedRolePolicies",
+                    "iam:CreatePolicy",
+                    "iam:DeletePolicy",
+                    "iam:GetPolicy",
+                    "iam:AttachRolePolicy",
+                    "iam:DetachRolePolicy"
+                ],
+                "Resource": "*"
+            },
+            {
+                "Sid": "ProjectCloudFrontManagement",
+                "Effect": "Allow",
+                "Action": [
+                    "cloudfront:CreateDistribution",
+                    "cloudfront:GetDistribution",
+                    "cloudfront:UpdateDistribution",
+                    "cloudfront:DeleteDistribution",
+                    "cloudfront:CreateOriginAccessControl",
+                    "cloudfront:GetOriginAccessControl",
+                    "cloudfront:DeleteOriginAccessControl"
+                ],
+                "Resource": "*"
+            }
+        ]
+    }
+    ```
+    *   Name the policy `TerraformDeveloperPermissions` and create it.
+    *   Back on the user creation tab, attach the new policy to your `<your-name>-developer` user and finish creating it.
+
+2.  **Create an Access Key for the CLI:**
+    *   Navigate to your new `<your-name>-developer` user's summary page.
+    *   Go to the **"Security credentials"** tab and click **"Create access key"**.
+    *   Choose **"Command Line Interface (CLI)"** as the use case and create the key.
+    *   Copy the **Access Key ID** and **Secret Access Key**.
+
+3.  **Configure the AWS CLI:**
+    *   In your terminal, run the `aws configure` command and provide the credentials you just created.
+    ```bash
+    aws configure
+    ```
+    *   **AWS Access Key ID:** Enter the Access Key ID for your `<your-name>-developer` user.
+    *   **AWS Secret Access Key:** Enter the Secret Access Key.
+    *   **Default region name:** Enter your preferred AWS region (e.g., `us-east-1`).
+    *   **Default output format:** You can leave this blank.
+
+The AWS CLI now has credentials for a user who can properly manage the remote state backend.
+
+### 3. Create the GitHub Actions OIDC Provider (One-Time Setup)
+
+Before you can deploy the Terraform code, you must establish a trust relationship between your AWS account and GitHub Actions. This is a one-time setup for your entire AWS account.
+
+1.  **Navigate to IAM > Identity Providers** in the AWS Management Console.
+2.  Click **"Add provider"**.
+3.  Select **"OpenID Connect"**.
+4.  For **Provider URL**, enter `https://token.actions.githubusercontent.com`.
+5.  For **Audience**, enter `sts.amazonaws.com`.
+6.  Click **"Add provider"**.
+
+Your AWS account is now configured to trust GitHub Actions.
+
+### 4. Manual Setup for Terraform Backend
+
+Before you can use Terraform to manage your infrastructure, you need a place to store its state file. This is a one-time manual setup.
+
+1.  **Create an S3 Bucket for Terraform State:**
+    *   Go to the S3 service in the AWS Management Console.
+    *   Create a new, private S3 bucket with a globally unique name (e.g., `your-company-terraform`).
+    *   **Enable bucket versioning.** This is critical as it acts as a built-in backup and recovery system for your state file, protecting you from accidental deletions or state corruption.
+
+    *That's it. With modern versions of Terraform, a separate DynamoDB table for state locking is no longer required.*
+
+### 5. Configure and Deploy the Infrastructure
+
+1.  **Navigate to the Terraform directory:**
+    ```bash
+    cd tf
+    ```
+
+2.  **Update the backend configuration:**
+    *   Open the `main.tf` file.
+    *   Replace `"your-terraform-state-bucket-name"` with the name of the S3 bucket you created for the backend state.
+
+3.  **Initialize Terraform:** This only needs to be done once.
+    ```bash
+    terraform init
+    ```
+
+4.  **Create your Development Workspace:** Terraform workspaces allow you to manage multiple environments. We'll start with `dev`.
+    ```bash
+    terraform workspace new dev
+    ```
+    *This command creates a new workspace called `dev` and automatically switches to it. You can see available workspaces with `terraform workspace list`.*
+
+5.  **Review and Apply the Plan for Dev:** Now you can deploy the `dev` environment using its specific variable file.
+    ```bash
+    # See what changes Terraform will make
+    terraform plan -var-file="dev.tfvars"
+
+    # Apply the changes
+    terraform apply -var-file="dev.tfvars"
+    ```
+    Terraform will show you a plan of the resources it will create. Type `yes` to approve the plan. Your infrastructure is now deployed for the `dev` environment.
+
+### 6. Managing a Production Environment
+
+When you are ready to deploy to production, the process is very similar.
+
+1.  **Create a `prod.tfvars` file:**
+    *   Make a copy of `dev.tfvars` and name it `prod.tfvars`.
+    *   Change the values inside `prod.tfvars` to what you need for your production environment (e.g., you might change the `deploy_bucket_name`).
+
+2.  **Create and switch to the `prod` workspace:**
+    ```bash
+    terraform workspace new prod
+    ```
+
+3.  **Deploy to Production:** Apply the configuration using the `prod.tfvars` file.
+    ```bash
+    terraform plan -var-file="prod.tfvars"
+    terraform apply -var-file="prod.tfvars"
+    ```
+
+You now have two completely separate sets of infrastructure deployed for `dev` and `prod`, with their state files safely isolated in your S3 bucket. You can switch between them at any time using `terraform workspace select <name>`.
+
+### 7. Update GitHub Actions Workflow
+
+After you have successfully run `terraform apply`, you need to update your GitHub Actions workflow to use the new IAM role.
+
+1.  **Get the IAM Role ARN:**
+    *   Run `terraform output github_actions_iam_role_arn` to get the ARN of the created IAM role.
+
+2.  **Get the CloudFront Distribution ID:**
+    *   Run `terraform output cloudfront_distribution_id` to get the ID of the CloudFront distribution.
+
+3.  **Update GitHub Secrets:**
+    *   Go to your GitHub repository's **Settings > Secrets and variables > Actions**.
+    *   You no longer need `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. You can delete them.
+    *   Add a new secret `AWS_ROLE_TO_ASSUME` and set its value to the IAM role ARN you retrieved.
+    *   Update the `CLOUDFRONT_DISTRIBUTION_ID` secret with the new ID from the Terraform output.
+
+4.  **Update the `deploy.yml` workflow:**
+    *   Modify your workflow to use the `aws-actions/configure-aws-credentials` action with the IAM role. See the updated example in the next section.
+
+Your CI/CD pipeline is now configured to securely deploy your application using the infrastructure managed by Terraform.
